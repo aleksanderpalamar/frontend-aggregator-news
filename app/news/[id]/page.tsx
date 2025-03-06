@@ -1,44 +1,61 @@
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Calendar, ExternalLink } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { notFound } from "next/navigation"
+"use client";
 
-async function getNewsById(id: string) {
-  try {
-    const res = await fetch(`http://localhost:3001/api/news/${id}`, {
-      next: { revalidate: 300 },
-    })
+import { getNewsById } from "@/app/actions/news";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { NewsItem } from "@/types/news";
+import { ArrowLeft, Calendar, ExternalLink, Loader } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-    if (!res.ok) {
-      return null
+export const dynamic = "force-dynamic";
+
+export default function NewsPage() {
+  const params = useParams<{ id: string }>();
+  const [news, setNews] = useState<NewsItem | null>(null);
+
+  useEffect(() => {
+    async function fetchNews() {
+      const newsData = await getNewsById(params.id);
+      if (!newsData) {
+        notFound();
+      } else {
+        setNews(newsData);
+      }
     }
-
-    return res.json()
-  } catch (error) {
-    console.error("Error fetching news:", error)
-    return null
-  }
-}
-
-
-export default async function NewsPage({ params }: { params: { id: string }}) {
-  const { id } = await params
-  const news = await getNewsById(id)
+    fetchNews();
+  }, [params.id]);
 
   if (!news) {
-    notFound()
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader className="animate-spin h-6 w-6" />
+      </div>
+    );
+  }
+
+  if (!news) {
+    notFound();
   }
 
   const formattedDate = news.datePublished
     ? new Date(news.datePublished).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    })
-    : null
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
@@ -68,7 +85,11 @@ export default async function NewsPage({ params }: { params: { id: string }}) {
               {formattedDate}
             </div>
             {news.source && <Badge>{news.source}</Badge>}
-            {news.author && <span className="text-sm text-muted-foreground">By {news.author}</span>}
+            {news.author && (
+              <span className="text-sm text-muted-foreground">
+                By {news.author}
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,7 +101,11 @@ export default async function NewsPage({ params }: { params: { id: string }}) {
         <CardFooter className="flex justify-end">
           {news.urlOriginal && (
             <Button asChild>
-              <Link href={news.urlOriginal} target="_blank" rel="noopener noreferrer">
+              <Link
+                href={news.urlOriginal}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Read original article
                 <ExternalLink className="ml-2 h-4 w-4" />
               </Link>
@@ -89,5 +114,5 @@ export default async function NewsPage({ params }: { params: { id: string }}) {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
