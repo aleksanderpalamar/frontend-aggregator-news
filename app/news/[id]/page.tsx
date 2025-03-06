@@ -25,7 +25,8 @@ async function getNewsById(id: string) {
 
 
 export default async function NewsPage({ params }: { params: { id: string }}) {
-  const news = await getNewsById(params.id)
+  const { id } = await params
+  const news = await getNewsById(id)
 
   if (!news) {
     notFound()
