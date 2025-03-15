@@ -6,7 +6,7 @@ export async function getNewsById(id: string) {
   const cookieStore = await cookies()
   
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/news/${id}`, {
       headers: {
         Authorization: `Bearer ${cookieStore.get("token")?.value}`,
       }
